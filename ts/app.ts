@@ -26,75 +26,75 @@ angular.module('statsApp',
            }])
   .component("loaderSpinner",
              {
-    template: `
+template: `
 <style>
-.loader,
-.loader:before,
-.loader:after {
-border-radius: 50%;
-}
-.loader {
-color: #1aaacc;
-font-size: 11px;
-text-indent: -99999em;
-margin: 55px auto;
-position: relative;
-width: 10em;
-height: 10em;
-box-shadow: inset 0 0 0 1em;
--webkit-transform: translateZ(0);
--ms-transform: translateZ(0);
-transform: translateZ(0);
-}
-.loader:before,
-.loader:after {
-position: absolute;
-content: '';
-}
-.loader:before {
-width: 5.2em;
-height: 10.2em;
-background: #ffffff;
-border-radius: 10.2em 0 0 10.2em;
-top: -0.1em;
-left: -0.1em;
--webkit-transform-origin: 5.2em 5.1em;
-transform-origin: 5.2em 5.1em;
--webkit-animation: load2 2s infinite ease 1.5s;
-animation: load2 2s infinite ease 1.5s;
-}
-.loader:after {
-width: 5.2em;
-height: 10.2em;
-background: #ffffff;
-border-radius: 0 10.2em 10.2em 0;
-top: -0.1em;
-left: 5.1em;
--webkit-transform-origin: 0px 5.1em;
-transform-origin: 0px 5.1em;
--webkit-animation: load2 2s infinite ease;
-animation: load2 2s infinite ease;
-}
-@-webkit-keyframes load2 {
-0% {
--webkit-transform: rotate(0deg);
-transform: rotate(0deg);
-}
-100% {
--webkit-transform: rotate(360deg);
-transform: rotate(360deg);
-}
-}
-@keyframes load2 {
-0% {
--webkit-transform: rotate(0deg);
-transform: rotate(0deg);
-}
-100% {
--webkit-transform: rotate(360deg);
-transform: rotate(360deg);
-}
-}
+  .loader,
+  .loader:before,
+  .loader:after {
+  border-radius: 50%;
+  }
+  .loader {
+  color: #1aaacc;
+  font-size: 11px;
+  text-indent: -99999em;
+  margin: 55px auto;
+  position: relative;
+  width: 10em;
+  height: 10em;
+  box-shadow: inset 0 0 0 1em;
+  -webkit-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+  }
+  .loader:before,
+  .loader:after {
+  position: absolute;
+  content: '';
+  }
+  .loader:before {
+  width: 5.2em;
+  height: 10.2em;
+  background: #ffffff;
+  border-radius: 10.2em 0 0 10.2em;
+  top: -0.1em;
+  left: -0.1em;
+  -webkit-transform-origin: 5.2em 5.1em;
+  transform-origin: 5.2em 5.1em;
+  -webkit-animation: load2 2s infinite ease 1.5s;
+  animation: load2 2s infinite ease 1.5s;
+  }
+  .loader:after {
+  width: 5.2em;
+  height: 10.2em;
+  background: #ffffff;
+  border-radius: 0 10.2em 10.2em 0;
+  top: -0.1em;
+  left: 5.1em;
+  -webkit-transform-origin: 0px 5.1em;
+  transform-origin: 0px 5.1em;
+  -webkit-animation: load2 2s infinite ease;
+  animation: load2 2s infinite ease;
+  }
+  @-webkit-keyframes load2 {
+  0% {
+  -webkit-transform: rotate(0deg);
+  transform: rotate(0deg);
+  }
+  100% {
+  -webkit-transform: rotate(360deg);
+  transform: rotate(360deg);
+  }
+  }
+  @keyframes load2 {
+  0% {
+  -webkit-transform: rotate(0deg);
+  transform: rotate(0deg);
+  }
+  100% {
+  -webkit-transform: rotate(360deg);
+  transform: rotate(360deg);
+  }
+  }
 </style>
 <div class="loader">Loading...</div>
 `})
@@ -143,8 +143,7 @@ transform: rotate(360deg);
                      selected: 'week'
                    };
 
-                   ["cities", "structures_types", "profiles_types", "structures", "applications"]
-                     .forEach((key) => { ctrl[key] = { list: [], selected: [] }; })
+                   ["cities", "structures_types", "profiles_types", "structures", "applications"].forEach((key) => { ctrl[key] = { list: [], selected: [] }; })
 
                    ctrl.multibarchart_options = {
                      chart: {
@@ -352,39 +351,37 @@ transform: rotate(360deg);
                      ctrl.loading = true;
                      ctrl.raw_logs = [];
 
+                     let extract_structures_ids_from_filters = () => {
+                       let structures_ids = [];
+
+                       if ( ctrl.structures.selected.length > 0 ) {
+                         structures_ids = structures_ids.concat( ctrl.structures.selected.map((s) => s.id) );
+                       }
+
+                       if ( ctrl.cities.selected.length > 0 ) {
+                         let cities = ctrl.cities.selected.map((c) => c.zip_code);
+
+                         structures_ids = structures_ids.concat( ctrl.structures.list.filter((s) => cities.includes( s.zip_code )).map((s) => s.id) );
+                       }
+
+                       if ( structures_ids.length == 0 ) {
+                         structures_ids = _(ctrl.user.profiles.map((profile) => profile.structure_id)).uniq();
+                       }
+
+                       return structures_ids;
+                     };
+
                      $http.get(`${URL_ENT}/api/logs`, {
                        params: {
                          'timestamp>': ctrl.debut.clone().toDate(),
-                         'timestamp<': ctrl.fin.clone().toDate()
+                         'timestamp<': ctrl.fin.clone().toDate(),
+                         'structure_id[]': extract_structures_ids_from_filters()
                        }
                      })
                        .then(function(response) {
                          ctrl.raw_logs = response.data;
-
-                         if (ctrl.raw_logs.length > 0) {
-                           $http.get(`${URL_ENT}/api/structures`, { params: { expand: false, "id[]": _.chain(ctrl.raw_logs).pluck("structure_id").uniq().value() } })
-                             .then((response) => {
-                               ctrl.structures.list = response.data;
-
-                               ctrl.labels.structure_id = (uai) => {
-                                 let label = '';
-                                 let structure = _(ctrl.structures.list).findWhere({ id: uai });
-                                 if (structure != undefined) {
-                                   label = structure.name;
-                                 }
-
-                                 return `${label} (${uai})`;
-                               };
-
-                               ctrl.cities.list = _.chain(ctrl.structures.list).map((structure) => { return { zip_code: structure.zip_code, city: structure.city }; }).uniq((city) => city.zip_code).reject((city) => { return city.zip_code == null || city.zip_code == ""; }).value();
-                             })
-                             .then(() => {
-                               ctrl.process_data(ctrl.filter_data(ctrl.raw_logs));
-                               ctrl.loading = false;
-                             });
-                         } else {
-                           ctrl.loading = false;
-                         }
+                         ctrl.process_data(ctrl.filter_data(ctrl.raw_logs));
+                         ctrl.loading = false;
                        });
                    };
 
@@ -399,6 +396,8 @@ transform: rotate(360deg);
 
                    $http.get(`${URL_ENT}/api/users/current`)
                      .then(function success(response) {
+                       ctrl.user = response.data;
+
                        ctrl.allowed = _.chain(response.data.profiles)
                          .pluck('type')
                          .intersection(['DIR', 'ADM'])
@@ -439,6 +438,27 @@ transform: rotate(360deg);
                            $http.get(`${URL_ENT}/api/structures_types`)
                              .then((response) => {
                                ctrl.structures_types.list = response.data;
+                             }),
+
+                           $http.get(`${URL_ENT}/api/structures`, { params: { expand: false, "id[]": _.chain(ctrl.raw_logs).pluck("structure_id").uniq().value() } })
+                             .then((response) => {
+                               ctrl.structures.list = response.data;
+
+                               ctrl.labels.structure_id = (uai) => {
+                                 let label = '';
+                                 let structure = _(ctrl.structures.list).findWhere({ id: uai });
+                                 if (structure != undefined) {
+                                   label = structure.name;
+                                 }
+
+                                 return `${label} (${uai})`;
+                               };
+
+                               ctrl.cities.list = _.chain(ctrl.structures.list).map((structure) => { return { zip_code: structure.zip_code, city: structure.city }; }).uniq((city) => city.zip_code).reject((city) => { return city.zip_code == null || city.zip_code == ""; }).value();
+                             })
+                             .then(() => {
+
+                               ctrl.loading = false;
                              })
                          ];
 
@@ -451,122 +471,123 @@ transform: rotate(360deg);
                  }
                 ],
     template: `
-<div class="container" ng:if="$ctrl.allowed">
-<div class="col-md-12" style="text-align: center;">
-<div class="controls pull-right">
-<select ng:options="period_type.value as period_type.label for period_type in $ctrl.period_types.list"
-ng:model="$ctrl.period_types.selected"
-ng:change="$ctrl.period.reset()"></select>
-<button class="btn btn-warning" ng:click="$ctrl.period.reset()"> ✕ </button>
-<button class="btn btn-primary" ng:click="$ctrl.period.decr()"> ◀ </button>
-<button class="btn btn-primary" ng:click="$ctrl.period.incr()"> ▶ </button>
-<button class="btn btn-success" ng:click="$ctrl.retrieve_data()"> Valider </button>
-</div>
-<h2>
-{{ $ctrl.debut | amDateFormat:'Do MMMM YYYY' }} - {{ $ctrl.fin | amDateFormat:'Do MMMM YYYY' }}
-</h2>
-</div>
-<h1 style="text-align: center;" ng:if="$ctrl.raw_logs.length == 0 && !$ctrl.loading">
-<span class="label label-primary">Aucune donnée disponible pour la période donnée.</span>
-</h1>
-<h1 style="text-align: center;" ng:if="$ctrl.raw_logs.length == 0 && $ctrl.loading">
-<span class="label label-warning">Chargement et traitement des données en cours...</span>
-<loader-spinner></loader-spinner>
-</h1>
-<div ng:if="$ctrl.raw_logs.length > 0 && !$ctrl.loading">
-<div class="col-md-12">
+    <div class="container" ng:if="$ctrl.allowed">
+      <div class="col-md-12" style="text-align: center;">
+        <div class="controls pull-right">
+          <select ng:options="period_type.value as period_type.label for period_type in $ctrl.period_types.list"
+                  ng:model="$ctrl.period_types.selected"
+                  ng:change="$ctrl.period.reset()"></select>
+          <button class="btn btn-warning" ng:click="$ctrl.period.reset()"> ✕ </button>
+          <button class="btn btn-primary" ng:click="$ctrl.period.decr()"> ◀ </button>
+          <button class="btn btn-primary" ng:click="$ctrl.period.incr()"> ▶ </button>
+          <button class="btn btn-success" ng:click="$ctrl.retrieve_data()"> Valider </button>
+        </div>
+        <h2>
+          {{ $ctrl.debut | amDateFormat:'Do MMMM YYYY' }} - {{ $ctrl.fin | amDateFormat:'Do MMMM YYYY' }}
+        </h2>
+      </div>
+      <h1 style="text-align: center;" ng:if="$ctrl.raw_logs.length == 0 && !$ctrl.loading">
+        <span class="label label-primary">Aucune donnée disponible pour la période donnée.</span>
+      </h1>
+      <div>
+        <div class="col-md-12">
 
-<div class="col-md-3">
-<div class="panel panel-default">
-<div class="panel-heading">
-Communes <button class="btn btn-xs btn-warning pull-right" ng:click="$ctrl.cities.selected = []; $ctrl.process_data($ctrl.filter_data($ctrl.raw_logs));"> ✕ </button>
-</div>
-<div class="panel-body" style="padding: 0;">
-<select multiple style="width: 100%;"
-ng:options="city as city.zip_code + ' : ' + city.city for city in $ctrl.cities.list | orderBy:'zip_code'"
-ng:model="$ctrl.cities.selected"
-ng:change="$ctrl.process_data($ctrl.filter_data($ctrl.raw_logs));"></select>
-</div>
-</div>
-</div>
+          <div class="col-md-3">
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                Communes <button class="btn btn-xs btn-warning pull-right" ng:click="$ctrl.cities.selected = []; $ctrl.process_data($ctrl.filter_data($ctrl.raw_logs));"> ✕ </button>
+              </div>
+              <div class="panel-body" style="padding: 0;">
+                <select multiple style="width: 100%;"
+                        ng:options="city as city.zip_code + ' : ' + city.city for city in $ctrl.cities.list | orderBy:'zip_code'"
+                        ng:model="$ctrl.cities.selected"
+                        ng:change="$ctrl.process_data($ctrl.filter_data($ctrl.raw_logs));"></select>
+              </div>
+            </div>
+          </div>
 
-<div class="col-md-3">
-<div class="panel panel-default">
-<div class="panel-heading">
-Établissements <button class="btn btn-xs btn-warning pull-right" ng:click="$ctrl.structures.selected = []; $ctrl.process_data($ctrl.filter_data($ctrl.raw_logs));"> ✕ </button>
-</div>
-<div class="panel-body" style="padding: 0;">
-<select multiple style="width: 100%;"
-ng:options="structure as structure.name for structure in $ctrl.structures.list | orderBy:'name'"
-ng:model="$ctrl.structures.selected"
-ng:change="$ctrl.process_data($ctrl.filter_data($ctrl.raw_logs));"></select>
-</div>
-</div>
-</div>
+          <div class="col-md-3">
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                Établissements <button class="btn btn-xs btn-warning pull-right" ng:click="$ctrl.structures.selected = []; $ctrl.process_data($ctrl.filter_data($ctrl.raw_logs));"> ✕ </button>
+              </div>
+              <div class="panel-body" style="padding: 0;">
+                <select multiple style="width: 100%;"
+                        ng:options="structure as structure.name for structure in $ctrl.structures.list | orderBy:'name'"
+                        ng:model="$ctrl.structures.selected"
+                        ng:change="$ctrl.process_data($ctrl.filter_data($ctrl.raw_logs));"></select>
+              </div>
+            </div>
+          </div>
 
-<div class="col-md-2">
-<div class="panel panel-default">
-<div class="panel-heading">
-Structures <button class="btn btn-xs btn-warning pull-right" ng:click="$ctrl.structures_types.selected = []; $ctrl.process_data($ctrl.filter_data($ctrl.raw_logs));"> ✕ </button>
-</div>
-<div class="panel-body" style="padding: 0;">
-<select multiple style="width: 100%;"
-ng:options="st as '' + st.name for st in $ctrl.structures_types.list | orderBy:'name'"
-ng:model="$ctrl.structures_types.selected"
-ng:change="$ctrl.process_data($ctrl.filter_data($ctrl.raw_logs));"></select>
-</div>
-</div>
-</div>
+          <div class="col-md-2">
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                Structures <button class="btn btn-xs btn-warning pull-right" ng:click="$ctrl.structures_types.selected = []; $ctrl.process_data($ctrl.filter_data($ctrl.raw_logs));"> ✕ </button>
+              </div>
+              <div class="panel-body" style="padding: 0;">
+                <select multiple style="width: 100%;"
+                        ng:options="st as '' + st.name for st in $ctrl.structures_types.list | orderBy:'name'"
+                        ng:model="$ctrl.structures_types.selected"
+                        ng:change="$ctrl.process_data($ctrl.filter_data($ctrl.raw_logs));"></select>
+              </div>
+            </div>
+          </div>
 
-<div class="col-md-2">
-<div class="panel panel-default">
-<div class="panel-heading">
-Profils <button class="btn btn-xs btn-warning pull-right" ng:click="$ctrl.profiles_types.selected = []; $ctrl.process_data($ctrl.filter_data($ctrl.raw_logs));"> ✕ </button>
-</div>
-<div class="panel-body" style="padding: 0;">
-<select multiple style="width: 100%;"
-ng:options="pt as pt.name for pt in $ctrl.profiles_types.list | orderBy:'name'"
-ng:model="$ctrl.profiles_types.selected"
-ng:change="$ctrl.process_data($ctrl.filter_data($ctrl.raw_logs));"></select>
-</div>
-</div>
-</div>
+          <div class="col-md-2">
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                Profils <button class="btn btn-xs btn-warning pull-right" ng:click="$ctrl.profiles_types.selected = []; $ctrl.process_data($ctrl.filter_data($ctrl.raw_logs));"> ✕ </button>
+              </div>
+              <div class="panel-body" style="padding: 0;">
+                <select multiple style="width: 100%;"
+                        ng:options="pt as pt.name for pt in $ctrl.profiles_types.list | orderBy:'name'"
+                        ng:model="$ctrl.profiles_types.selected"
+                        ng:change="$ctrl.process_data($ctrl.filter_data($ctrl.raw_logs));"></select>
+              </div>
+            </div>
+          </div>
 
-<div class="col-md-2">
-<div class="panel panel-default">
-<div class="panel-heading">
-Tuiles <button class="btn btn-xs btn-warning pull-right" ng:click="$ctrl.applications.selected = []; $ctrl.process_data($ctrl.filter_data($ctrl.raw_logs));"> ✕ </button>
-</div>
-<div class="panel-body" style="padding: 0;">
-<select multiple style="width: 100%;"
-ng:options="app as app.name for app in $ctrl.applications.list | orderBy:'name'"
-ng:model="$ctrl.applications.selected"
-ng:change="$ctrl.process_data($ctrl.filter_data($ctrl.raw_logs));"></select>
-</div>
-</div>
-</div>
+          <div class="col-md-2">
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                Tuiles <button class="btn btn-xs btn-warning pull-right" ng:click="$ctrl.applications.selected = []; $ctrl.process_data($ctrl.filter_data($ctrl.raw_logs));"> ✕ </button>
+              </div>
+              <div class="panel-body" style="padding: 0;">
+                <select multiple style="width: 100%;"
+                        ng:options="app as app.name for app in $ctrl.applications.list | orderBy:'name'"
+                        ng:model="$ctrl.applications.selected"
+                        ng:change="$ctrl.process_data($ctrl.filter_data($ctrl.raw_logs));"></select>
+              </div>
+            </div>
+          </div>
 
-</div>
+        </div>
 
-<div class="col-md-12">
-<em class="col-md-3 label label-default">{{$ctrl.totals.clicks}} clicks</em>
-<em class="col-md-3 label label-primary">{{$ctrl.totals.users}} utilisateurs uniques</em>
-<em class="col-md-3 label label-success">{{$ctrl.totals.connections}} connexions</em>
-<em class="col-md-3 label label-info">{{$ctrl.totals.active_connections}} connexions actives</em>
-</div>
+        <h1 style="text-align: center;" ng:if="$ctrl.raw_logs.length == 0 && $ctrl.loading">
+          <span class="label label-warning">Chargement et traitement des données en cours...</span>
+          <loader-spinner></loader-spinner>
+        </h1>
 
-<uib-tabset>
-<uib-tab index="$index + 1"
-ng:repeat="(key, stat) in $ctrl.stats">
-<uib-tab-heading>
-<em class="badge">{{stat[0].values.length}}</em> {{$ctrl.types_labels[key]}} <button class="btn btn-xs btn-primary" ng:click="$ctrl.download_json(stat, key)"><span class="glyphicon glyphicon-save"></span></button>
-</uib-tab-heading>
-<nvd3 data="stat"
-options="$ctrl.chart_options( key, stat )">
-</nvd3>
-</uib-tab>
-</uib-tabset>
-</div>
-</div>
+        <div class="col-md-12" ng:if="$ctrl.raw_logs.length > 0 && !$ctrl.loading">
+          <em class="col-md-3 label label-default">{{$ctrl.totals.clicks}} clicks</em>
+          <em class="col-md-3 label label-primary">{{$ctrl.totals.users}} utilisateurs uniques</em>
+          <em class="col-md-3 label label-success">{{$ctrl.totals.connections}} connexions</em>
+          <em class="col-md-3 label label-info">{{$ctrl.totals.active_connections}} connexions actives</em>
+        </div>
+
+        <uib-tabset>
+          <uib-tab index="$index + 1"
+                   ng:repeat="(key, stat) in $ctrl.stats">
+            <uib-tab-heading>
+              <em class="badge">{{stat[0].values.length}}</em> {{$ctrl.types_labels[key]}} <button class="btn btn-xs btn-primary" ng:click="$ctrl.download_json(stat, key)"><span class="glyphicon glyphicon-save"></span></button>
+            </uib-tab-heading>
+            <nvd3 data="stat"
+                  options="$ctrl.chart_options( key, stat )">
+            </nvd3>
+          </uib-tab>
+        </uib-tabset>
+      </div>
+    </div>
 `
   });
