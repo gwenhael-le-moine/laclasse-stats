@@ -1,0 +1,45 @@
+{
+    "name": "service-portail",
+    "version": "1.17.1",
+    "description": "Portail de laclasse.com",
+    "main": "index.html",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/laclasse-com/service-portail.git"
+    },
+    "keywords": [
+        "laclasse.com"
+    ],
+    "author": "Métropole de Lyon",
+    "license": "AGPL-3.0",
+    "bugs": {
+        "url": "https://github.com/laclasse-com/service-portail/issues"
+    },
+    "homepage": "https://github.com/laclasse-com/service-portail#readme",
+    "dependencies": {
+        "@types/angular": "^1.6.43",
+        "@types/d3": "^5.0.0",
+        "@types/moment": "^2.13.0",
+        "@types/underscore": "^1.8.8",
+        "@uirouter/angularjs": "^1.0.15",
+        "angular": "^1.6.10",
+        "angular-animate": "^1.6.10",
+        "angular-i18n": "^1.6.10",
+        "angular-loading-bar": "^0.9.0",
+        "angular-moment": "^1",
+        "angular-nvd3": "^1.0.9",
+        "angular-ui-bootstrap": "^2.1.3",
+        "bootstrap": "^3.3.7",
+        "d3": "^3",
+        "es5-shim": "^4.5.9",
+        "google-closure-compiler-js": "^20180204.0.0",
+        "laclasse-common-client": "git+https://git@github.com/laclasse-com/laclasse-common-client.git",
+        "nvd3": "^1.8.6",
+        "typescript": "^2.8.3",
+        "typescript-formatter": "^7.2.0",
+        "underscore": "^1.9.0"
+    }
+}
