@@ -1,2 +1,2 @@
 angular.module( 'statsApp' )
-  .constant( 'URL_ENT', 'http://localhost/annuaire' );
+  .constant( 'URL_ENT', 'http://localhost' );
